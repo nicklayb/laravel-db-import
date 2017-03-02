@@ -13,7 +13,6 @@
             "email": "nicklay@me.com"
         }
     ],
-    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Nicklayb\\LaravelDbImport\\": "src/"
