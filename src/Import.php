@@ -2,6 +2,14 @@
 
 namespace Nicklayb\LaravelDbImport;
 
+/**
+ * Class for Import process
+ *
+ * @author Nicolas Boisvert (nicklay@me.com)
+ *
+ * Extends this class to match your needs. Don't forget to add it in your
+ * dbimport.php config file so you will be able to call it
+ */
 abstract class Import
 {
     /**
@@ -52,25 +60,37 @@ abstract class Import
      */
     protected $refresh = false;
 
+    /**
+     * Specify table by table the select statement of which column to load
+     *
+     * @var array
+     */
     protected $selects = [];
 
+    /**
+     * Show table command, it may change depending on your database server
+     *
+     * @var string
+     */
     protected $showTablesCommand = 'SHOW TABLES';
 
-    public function getShowTablesCommand()
-    {
-        return $this->showTablesCommand;
-    }
-
-    public function getSourceConnection()
-    {
-        return $this->sourceConnection;
-    }
-
+    /**
+     * Checks if provided table has specific selected columns
+     *
+     * @param string $table
+     * @return bool
+     */
     public function hasSelects($table)
     {
         return isset($this->selects[$table]);
     }
 
+    /**
+     * Gets specific selects for defined table
+     *
+     * @param string $table
+     * @return array
+     */
     public function getSelects($table)
     {
         if ($this->hasSelects($table)) {
@@ -79,46 +99,62 @@ abstract class Import
         return ['*'];
     }
 
-    public function getDestinationConnection()
-    {
-        return $this->destinationConnection;
-    }
-
+    /**
+     * Return the qualified column name for table select
+     *
+     * @return string
+     */
     public function getQualifiedTableColumnName()
     {
         return 'Tables_in_'.$this->sourceConnection;
     }
 
+    /**
+     * Return the database name from the configuration for the source
+     *
+     * @return string
+     */
     public function getSourceDatabaseName()
     {
         return config('database.connections.'.$this->sourceConnection.'.database');
     }
 
+    /**
+     * Load all tables from the source connection
+     *
+     * @return array
+     */
     public function loadSourceTables()
     {
         return DB::connection($this->sourceConnection)->select($this->showTablesCommand);
     }
 
+    /**
+     * Get a collection of only the table names from the the source connection
+     *
+     * @return Collection
+     */
     public function getSourceTables()
     {
-        return collect($this->getTableSelect())->pluck($this->getQualifiedTableColumnName())
+        return collect($this->loadSourceTables())->pluck($this->getQualifiedTableColumnName())
     }
 
-    public function getIgnoreTables()
-    {
-        return $this->ignoreTables;
-    }
-
-    public function getLastTables()
-    {
-        return $this->lastTables;
-    }
-
+    /**
+     * Return the count of the pre/post tasks of the import
+     *
+     * @return int
+     */
     public function countImportTasks()
     {
         return count($this->preImport()) + count($this->postImport());
     }
 
+    /**
+     * Return all rows from specified table in the source connection with
+     * the selected columns
+     *
+     * @return Collection
+     */
     public function getSourceRows($table)
     {
         return DB::connection($this->sourceConnection)
@@ -127,6 +163,11 @@ abstract class Import
             ->get();
     }
 
+    /**
+     * Delete the content of the destination connection table
+     *
+     * @return int
+     */
     public function clearDestinationTable($table)
     {
         return DB::connection($this->destinationConnection)
@@ -134,6 +175,11 @@ abstract class Import
             ->delete();
     }
 
+    /**
+     * Insert specific data into the destination connection
+     *
+     * @return int
+     */
     public function insertInDestination($table, $row)
     {
         return DB::connection($this->destinationConnection)
@@ -141,6 +187,11 @@ abstract class Import
             ->insert((array) $this->executeManipulation($table, $row));
     }
 
+    /**
+     * Sort the sources tables by ordering last tables and removing the ingored
+     *
+     * @return Collection
+     */
     public function getSortedSourceTables()
     {
         $tables = $this->getSourceTables();
@@ -149,31 +200,31 @@ abstract class Import
         foreach ($tables as $table) {
             if ($this->hasLastTable($table)) {
                 $hold->push($table);
-            } else {
+            } elseif (!$this->hasIgnoreTable($table)) {
                 $filteredTables->push($table);
             }
         }
         return $filteredTables->merge($holds);
     }
 
+    /**
+     * Check if a specified table should be ignored
+     *
+     * @return bool
+     */
     public function hasIgnoreTable($table)
     {
         return in_array($table, $this->ignoreTables);
     }
 
-    public function hasLastTable($table)
-    {
-        return in_array($table, $this->lastTables);
-    }
-
     /**
-     * Check if any ignore table is registered in the property
+     * Check if a specified table should be last
      *
      * @return bool
      */
-    public function hasIgnoreTables()
+    public function hasLastTable($table)
     {
-        return count($this->ignoreTables) > 0;
+        return in_array($table, $this->lastTables);
     }
 
     /**

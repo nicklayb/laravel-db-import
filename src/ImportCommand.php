@@ -29,24 +29,49 @@ class ImportCommand extends Command
      */
     protected $import = null;
 
+    /**
+     * Name of the import
+     *
+     * @var string
+     */
     protected $importName;
 
+    /**
+     * All the source tables to import
+     *
+     * @var array
+     */
     protected $sourceTables = [];
 
+    /**
+     * Count of all the tasks required to complete de command
+     *
+     * @var int
+     */
     protected $tasksCount = 0;
 
+    /**
+     * List of errors that happens during import
+     *
+     * @var array
+     */
     protected $errors = [];
 
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
+    /**
+     * Checks if the provided import is in the config file
+     *
+     * @return bool
+     */
     private function importIsRegistered()
     {
         return in_array($this->importName, config('dbimport.imports'));
     }
 
+    /**
+     * Create the actual import instance
+     *
+     * @return bool
+     */
     private function createImport()
     {
         if ($this->importIsRegistered()) {
@@ -61,12 +86,22 @@ class ImportCommand extends Command
         return false;
     }
 
+    /**
+     * Setup the tasks count for the progress bar
+     *
+     * @return void
+     */
     public function setTasksCount()
     {
         $this->tasksCount = $this->sourceTables->count() + $this->import->countImportTasks();
         $this->bar = $this->output->createProgressBar($this->tasksCount);
     }
 
+    /**
+     * Handle the command process. This is overriden from Laravel's command
+     *
+     * @return void
+     */
     public function handle()
     {
         if ($this->boot()) {
@@ -76,6 +111,11 @@ class ImportCommand extends Command
         }
     }
 
+    /**
+     * Handle the tables imports process
+     *
+     * @return void
+     */
     private function handleImport()
     {
         foreach ($this->sourceTables as $table) {
@@ -92,6 +132,11 @@ class ImportCommand extends Command
         }
     }
 
+    /**
+     * Handle specific table import
+     *
+     * @return void
+     */
     public function handleTableImport($table)
     {
         $count = 0;
@@ -108,6 +153,11 @@ class ImportCommand extends Command
         return $count;
     }
 
+    /**
+     * Executes array of tasks
+     *
+     * @return void
+     */
     private function executeTasks($tasks)
     {
         foreach ($tasks as $key => $task) {
@@ -117,6 +167,11 @@ class ImportCommand extends Command
         }
     }
 
+    /**
+     * Bootup the command process and return if the command can proceed or not
+     *
+     * @return true
+     */
     private function boot()
     {
         $this->importName = $this->argument('database');

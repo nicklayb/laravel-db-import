@@ -7,6 +7,11 @@ use Illuminate\Support\ServiceProvider as BaseProvider;
 
 class ServiceProvider extends BaseProvider
 {
+    /**
+     * Config file name
+     *
+     * @var string
+     */
     const CONFIG_FILE = 'dbimport.php';
 
     /**
@@ -42,6 +47,9 @@ class ServiceProvider extends BaseProvider
      */
     public function provides()
     {
-        return ['Nicklayb\LaravelDbImport\DbImport'];
+        return [
+            'Nicklayb\LaravelDbImport\ImportCommand',
+            'Nicklayb\LaravelDbImport\Import'
+        ];
     }
 }
