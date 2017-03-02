@@ -2,15 +2,18 @@
     "name": "nicklayb/laravel-db-import",
     "description": "Laravel database import package for easy manipulations",
     "type": "package",
+    "keywords": ["laravel", "database", "import", "artisan"],
+    "license": "MIT",
     "require": {
         "laravel/laravel": "^5"
     },
     "authors": [
         {
             "name": "Nicolas Boisvert",
-            "email": "nboisvert@armrecouvrement.com"
+            "email": "nicklay@me.com"
         }
     ],
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Nicklayb\\LaravelDbImport\\": "src/"
