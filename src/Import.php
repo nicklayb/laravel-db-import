@@ -2,6 +2,8 @@
 
 namespace Nicklayb\LaravelDbImport;
 
+use DB;
+
 /**
  * Class for Import process
  *
@@ -17,14 +19,14 @@ abstract class Import
      *
      * @var string
      */
-    protected $sourceConnection;
+    protected $sourceConnection = 'source';
 
     /**
      * The key of the destination connection created in the database config file
      *
      * @var string
      */
-    protected $destinationConnection = null;
+    protected $destinationConnection = 'destination';
 
     /**
      * Password reset option, yout must specify the table of the users as
@@ -106,7 +108,7 @@ abstract class Import
      */
     public function getQualifiedTableColumnName()
     {
-        return 'Tables_in_'.$this->sourceConnection;
+        return 'Tables_in_'.$this->getSourceDatabaseName();
     }
 
     /**
@@ -136,7 +138,7 @@ abstract class Import
      */
     public function getSourceTables()
     {
-        return collect($this->loadSourceTables())->pluck($this->getQualifiedTableColumnName())
+        return collect($this->loadSourceTables())->pluck($this->getQualifiedTableColumnName());
     }
 
     /**

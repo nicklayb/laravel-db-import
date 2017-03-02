@@ -5,6 +5,17 @@ namespace Nicklayb\LaravelDbImport;
 use DB;
 use Artisan;
 use Illuminate\Console\Command;
+use Nicklayb\LaravelDbImport\Exceptions\UnregisteredImportException;
+
+/**
+ * Class for Import command
+ *
+ * @author Nicolas Boisvert (nicklay@me.com)
+ *
+ * Artisan command that will do an extended import process. Extends the Import
+ * class and then register the namespace in importdb.php config file. Then
+ * you pass the key in parameters when calling the command
+ */
 
 class ImportCommand extends Command
 {
@@ -64,7 +75,7 @@ class ImportCommand extends Command
      */
     private function importIsRegistered()
     {
-        return in_array($this->importName, config('dbimport.imports'));
+        return isset(config('dbimport.imports')[$this->importName]);
     }
 
     /**
@@ -76,12 +87,13 @@ class ImportCommand extends Command
     {
         if ($this->importIsRegistered()) {
             try {
-                $import = config('dbimport.imports'.$this->importName);
+                $import = config('dbimport.imports.'.$this->importName);
                 $this->import = new $import();
                 return true;
             } catch (Exception $e) {
-                echo 'ERROR';
             }
+        } else {
+            throw new UnregisteredImportException($this->importName);
         }
         return false;
     }
@@ -105,6 +117,11 @@ class ImportCommand extends Command
     public function handle()
     {
         if ($this->boot()) {
+            $this->bar->start();
+            if ($this->import->needsRefrseh()) {
+                $this->bar->setMessage('Refreshing');
+                Artisan::call('migrate:refresh');
+            }
             $this->executeTasks($this->import->preImport());
             $this->handleImport();
             $this->executeTasks($this->import->postImport());
@@ -120,6 +137,7 @@ class ImportCommand extends Command
     {
         foreach ($this->sourceTables as $table) {
             $this->handleTableImport($table);
+            $this->bar->advance();
         }
         $this->bar->finish();
         $this->info("\nAll done!");
@@ -139,6 +157,7 @@ class ImportCommand extends Command
      */
     public function handleTableImport($table)
     {
+        $this->bar->setMessage('Importing '.$table);
         $count = 0;
         $rows = $this->import->getSourceRows($table);
         $this->import->clearDestinationTable($table);
@@ -179,8 +198,8 @@ class ImportCommand extends Command
             $this->sourceTables = $this->import->getSortedSourceTables();
             $this->setTasksCount();
             $this->info("Database import in progress...\n");
+            $this->bar->setMessage('');
             $this->bar->setFormat("%message%\n %current%/%max% [%bar%] %percent:3s%%");
-            $this->bar->start();
             return true;
         }
         return false;
