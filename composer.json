@@ -1,0 +1,20 @@
+{
+    "name": "nicklayb/laravel-db-import",
+    "description": "Laravel database import package for easy manipulations",
+    "type": "package",
+    "require": {
+        "laravel/laravel": "^5"
+    },
+    "authors": [
+        {
+            "name": "Nicolas Boisvert",
+            "email": "nboisvert@armrecouvrement.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Nicklayb\\LaravelDbImport\\": "src/",
+        },
+    }
+}
+Nicklayb\LaravelDbImport
