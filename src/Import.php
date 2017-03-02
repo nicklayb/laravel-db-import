@@ -77,6 +77,13 @@ abstract class Import
     protected $showTablesCommand = 'SHOW TABLES';
 
     /**
+     * Key for default password when using reset passwords
+     *
+     * @var string
+     */
+    protected $defaultPasswordColumn = 'password';
+
+    /**
      * Checks if provided table has specific selected columns
      *
      * @param string $table
@@ -161,7 +168,7 @@ abstract class Import
     {
         return DB::connection($this->sourceConnection)
             ->table($table)
-            ->select($this->getSelects())
+            ->select($this->getSelects($table))
             ->get();
     }
 
@@ -184,9 +191,26 @@ abstract class Import
      */
     public function insertInDestination($table, $row)
     {
+        if ($this->hasPasswordResets()) {
+            $passwords = $this->getPasswordResetValues($table);
+            foreach ($passwords as $column => $password) {
+                $row->{$column} = $this->hashPassword($password);
+            }
+        }
         return DB::connection($this->destinationConnection)
             ->table($table)
             ->insert((array) $this->executeManipulation($table, $row));
+    }
+
+    /**
+     * Method that hashes password
+     *
+     * @param string $password
+     * @return string
+     */
+    public function hashPassword($password)
+    {
+        return bcrypt($password);
     }
 
     /**
@@ -201,7 +225,7 @@ abstract class Import
         $holds = collect([]);
         foreach ($tables as $table) {
             if ($this->hasLastTable($table)) {
-                $hold->push($table);
+                $holds->push($table);
             } elseif (!$this->hasIgnoreTable($table)) {
                 $filteredTables->push($table);
             }
@@ -230,21 +254,32 @@ abstract class Import
     }
 
     /**
-     * Check if there is a password reset for specified table
+     * Check if it has password resets registered
+     *
+     * @return boolean [description]
+     */
+    public function hasPasswordResets()
+    {
+        return count($this->resetPassword) > 0;
+    }
+
+    /**
+     * Get password reset values
      *
      * @return bool
      */
-    public function hasPasswordReset($table)
+    public function getPasswordResetValues($table)
     {
+        $columns = [];
         foreach ($this->resetPassword as $key => $password) {
-            $tableName = $key;
-            $pos = strpos($tableName, ':');
-            $tableName = ($pos !== false) ? substr($table, 0, $pos) : $tableName;
+            $pos = strpos($key, ':');
+            $tableName = ($pos !== false) ? substr($key, 0, $pos) : $key;
+            $column = ($pos !== false) ? substr($key, ($pos + 1)) : 'password';
             if ($table == $tableName) {
-                return true;
+                $columns[$column] = $password;
             }
         }
-        return false;
+        return $columns;
     }
 
     /**
