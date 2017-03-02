@@ -2,7 +2,6 @@
 
 namespace Nicklayb\LaravelDbImport;
 
-use Nicklayb\LaravelDbImport\DbImport;
 use Illuminate\Support\ServiceProvider as BaseProvider;
 
 class ServiceProvider extends BaseProvider
@@ -35,7 +34,7 @@ class ServiceProvider extends BaseProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                DbImport::class,
+                ImportCommand::class,
             ]);
         }
     }

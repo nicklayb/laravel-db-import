@@ -5,7 +5,7 @@
     "keywords": ["laravel", "database", "import", "artisan"],
     "license": "MIT",
     "require": {
-        "laravel/laravel": "^5"
+        "illuminate/support": "5.1.x|5.2.x|5.3.x|5.4.x",
     },
     "authors": [
         {
