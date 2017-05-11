@@ -169,7 +169,7 @@ abstract class Import
         $query = DB::connection($this->sourceConnection)
             ->table($table)
             ->select($this->getSelects($table));
-        return $this->queryTable($query)->get();
+        return $this->queryTable($query, $table)->get();
     }
 
     /**
