@@ -50,6 +50,19 @@ class ExtendedImport extends Nicklayb\LaravelDbImport\Import
             }
         ];
     }
+
+    public function getSourceTables()
+    {
+        return [
+            'users',
+            'migrations',
+            'relation_one',
+            'products',
+            'relation_two',
+            'roles',
+            'orders'
+        ];
+    }
 }
 
 class ImportTest extends TestCase
@@ -214,5 +227,19 @@ class ImportTest extends TestCase
     {
         $expected = 2;
         $this->assertEquals($expected, $this->extendedImport->countImportTasks());
+    }
+
+    public function testGetSortedSourceTables()
+    {
+        $expected = [
+            'users',
+            'products',
+            'roles',
+            'orders',
+            'relation_one',
+            'relation_two'
+        ];
+
+        $this->assertEquals($expected, $this->extendedImport->getSortedSourceTables()->toArray());
     }
 }
