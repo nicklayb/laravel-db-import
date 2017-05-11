@@ -18,7 +18,8 @@ class ExtendedImport extends Nicklayb\LaravelDbImport\Import
         ]
     ];
     protected $resetPassword = [
-        'users:password' => 'test'
+        'users' => 'test',
+        'users:super_secret_password' => 'new secret'
     ];
 
     public function filterUsers($query)
@@ -101,7 +102,10 @@ class ImportTest extends TestCase
 
     public function testGetPasswordResetValues()
     {
-        $expected = ['password' => 'test'];
+        $expected = [
+            'super_secret_password' => 'new secret',
+            'password' => 'test'
+        ];
         $this->assertEquals($expected, $this->extendedImport->getPasswordResetValues('users'));
     }
 
