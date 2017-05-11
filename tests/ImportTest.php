@@ -4,8 +4,23 @@ use PHPUnit\Framework\TestCase;
 
 require __DIR__.'/../src/Import.php';
 
-class ImportExtended extends Nicklayb\LaravelDbImport\Import
+class BasicImport extends Nicklayb\LaravelDbImport\Import
 {
+}
+
+class ExtendedImport extends Nicklayb\LaravelDbImport\Import
+{
+    protected $ignoreTables = [ 'migrations' ];
+    protected $lastTables = [ 'relation_one', 'relation_two' ];
+    protected $selects = [
+        'users' => [
+            'id', 'firstname', 'lastname'
+        ]
+    ];
+    protected $resetPassword = [
+        'users:password' => 'test'
+    ];
+
     public function filterUsers($query)
     {
         return $query;
@@ -16,22 +31,110 @@ class ImportExtended extends Nicklayb\LaravelDbImport\Import
         $user['key'] = 'value';
         return $user;
     }
+
+    public function preImport()
+    {
+        return [
+            'pre_task' => function () {
+                //
+            }
+        ];
+    }
+
+    public function postImport()
+    {
+        return [
+            'post_task' => function () {
+                //
+            }
+        ];
+    }
 }
 
 class ImportTest extends TestCase
 {
-    protected $import;
+    protected $basicImport;
+    protected $extendedImport;
 
     public function __construct()
     {
         parent::__construct();
-        $this->import = new ImportExtended;
+        $this->basicImport = new BasicImport;
+        $this->extendedImport = new ExtendedImport;
+    }
+
+    public function testHasIgnoreTable()
+    {
+        $this->assertTrue($this->extendedImport->hasIgnoreTable('migrations'));
+    }
+
+    public function testHasIgnoreTableInexistant()
+    {
+        $this->assertFalse($this->extendedImport->hasIgnoreTable('products'));
+    }
+
+    public function testHasLastTable()
+    {
+        $this->assertTrue($this->extendedImport->hasLastTable('relation_one'));
+    }
+
+    public function testHasLastTableInexistant()
+    {
+        $this->assertFalse($this->extendedImport->hasLastTable('products'));
+    }
+
+    public function testHasPasswordReset()
+    {
+        $this->assertTrue($this->extendedImport->hasPasswordResets());
+    }
+
+    public function testHasPasswordResetInexistant()
+    {
+        $this->assertFalse($this->basicImport->hasPasswordResets());
     }
 
     public function testQualifiedManipulationName()
     {
         $expected = 'manipulateUsers';
-        $this->assertEquals($expected, $this->import->getManipulationName('users'));
+        $this->assertEquals($expected, $this->extendedImport->getManipulationName('users'));
+    }
+
+    public function testGetPasswordResetValues()
+    {
+        $expected = ['password' => 'test'];
+        $this->assertEquals($expected, $this->extendedImport->getPasswordResetValues('users'));
+    }
+
+    public function testHasSelects()
+    {
+        $this->assertTrue($this->extendedImport->hasSelects('users'));
+    }
+
+    public function testHasSelectsInexistant()
+    {
+        $this->assertFalse($this->extendedImport->hasSelects('products'));
+    }
+
+    /**
+     * @depends testHasSelects
+     * @depends testHasSelectsInexistant
+     */
+    public function testGetSelects()
+    {
+        $expected = [
+            'id', 'firstname', 'lastname'
+        ];
+        $this->assertEquals($expected, $this->extendedImport->getSelects('users'));
+    }
+
+    /**
+     * @depends testHasSelects
+     * @depends testHasSelectsInexistant
+     */
+    public function testGetSelectsInexistant()
+    {
+        $expected = [ '*' ];
+        $this->assertEquals($expected, $this->extendedImport->getSelects('products'));
     }
 
     /**
@@ -39,7 +142,7 @@ class ImportTest extends TestCase
      */
     public function testHasTableManipulation()
     {
-        $this->assertTrue($this->import->hasManipulation('users'));
+        $this->assertTrue($this->extendedImport->hasManipulation('users'));
     }
 
     /**
@@ -47,13 +150,13 @@ class ImportTest extends TestCase
      */
     public function testHasInexistantTableManipulation()
     {
-        $this->assertFalse($this->import->hasManipulation('products'));
+        $this->assertFalse($this->extendedImport->hasManipulation('products'));
     }
 
     public function testQualifiedFilterName()
     {
         $expected = 'filterUsers';
-        $this->assertEquals($expected, $this->import->getFilterName('users'));
+        $this->assertEquals($expected, $this->extendedImport->getFilterName('users'));
     }
 
     /**
@@ -61,7 +164,7 @@ class ImportTest extends TestCase
      */
     public function testHasTableFilter()
     {
-        $this->assertTrue($this->import->hasTableFilter('users'));
+        $this->assertTrue($this->extendedImport->hasTableFilter('users'));
     }
 
     /**
@@ -69,7 +172,7 @@ class ImportTest extends TestCase
      */
     public function testHasInexistantTableFilter()
     {
-        $this->assertFalse($this->import->hasTableFilter('products'));
+        $this->assertFalse($this->extendedImport->hasTableFilter('products'));
     }
 
     /**
@@ -86,7 +189,7 @@ class ImportTest extends TestCase
             'key' => 'value'
         ];
 
-        $this->assertEquals($expected, $this->import->executeManipulation($table, $base));
+        $this->assertEquals($expected, $this->extendedImport->executeManipulation($table, $base));
     }
 
     /**
@@ -100,6 +203,12 @@ class ImportTest extends TestCase
         $base = [ 'root' => 'element' ];
         $expected = [ 'root' => 'element' ];
 
-        $this->assertEquals($expected, $this->import->executeManipulation($table, $base));
+        $this->assertEquals($expected, $this->extendedImport->executeManipulation($table, $base));
+    }
+
+    public function testCountImportTasks()
+    {
+        $expected = 2;
+        $this->assertEquals($expected, $this->extendedImport->countImportTasks());
     }
 }
