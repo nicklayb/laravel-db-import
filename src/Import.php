@@ -166,10 +166,48 @@ abstract class Import
      */
     public function getSourceRows($table)
     {
-        return DB::connection($this->sourceConnection)
+        $query = DB::connection($this->sourceConnection)
             ->table($table)
-            ->select($this->getSelects($table))
-            ->get();
+            ->select($this->getSelects($table));
+        return $this->queryTable($query)->get();
+    }
+
+    /**
+     * Filter query with specific table filters
+     *
+     * @param  QueryBuilder $query
+     * @param  String $table
+     * @return QueryBuilder
+     */
+    public function queryTable($query, $table)
+    {
+        if ($this->hasTableFilter($table)) {
+            $filterName = $this->getFilterName($table);
+            return $this->{$filterName}($query);
+        }
+        return $query;
+    }
+
+    /**
+     * Validates if a specific table has a custom filter
+     *
+     * @param  String  $table
+     * @return boolean
+     */
+    public function hasTableFilter($table)
+    {
+        return method_exists($this, $this->getFilterName($table));
+    }
+
+    /**
+     * Returns the qualified method name for a table filter
+     *
+     * @param  String $table
+     * @return String
+     */
+    public function getFilterName($table)
+    {
+        return 'filter'.studly_case($table);
     }
 
     /**
@@ -310,7 +348,7 @@ abstract class Import
      */
     public function getManipulationName($table)
     {
-        return 'manipulate'.camel_case($table);
+        return 'manipulate'.studly_case($table);
     }
 
     /**

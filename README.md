@@ -67,6 +67,31 @@ class ProdImport extends Import
 }
 ```
 
+#### Table filter
+
+Sometimes you may need to filter tables to get only certain items like, for instance, only the last 6 months of work. This may be achieved by adding table filters.
+
+Let say I have a table called `orders` where I only need the last 6 months items.
+
+```
+namespace Foo\Console\Commands;
+
+use Nicklayb\LaravelDbImport\Import;
+
+class ProdImport extends Import
+{
+    protected $sourceConnection = 'source';
+    protected $destinationConnection = 'mysql';
+
+    public function filterUsers($query)
+    {
+        return $query->where('created_at', '>', Carbon::now()->subMonths(6));
+    }
+}
+```
+
+You will receive the base query in parameter and you should return the modified query.
+
 ### Registering import
 
 Since you published the vendor's file, you'll notice that you have a brand new `dbimport.php` in your config file. In this file you will register all of you import classes you want to use.
