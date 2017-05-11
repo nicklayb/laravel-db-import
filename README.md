@@ -1,6 +1,8 @@
 # Laravel DB Import
 ###### By Nicolas Boisvert :: nicklay@me.com
 
+[![Build Status](https://travis-ci.org/nicklayb/laravel-db-import.svg?branch=master)](https://travis-ci.org/nicklayb/laravel-db-import)
+
 ### Laravel database import package for easy manipulations
 
 ## Purposes
