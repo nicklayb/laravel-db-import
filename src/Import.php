@@ -258,16 +258,21 @@ abstract class Import
      */
     public function getSortedSourceTables()
     {
-        $tables = $this->getSourceTables();
         $filteredTables = collect([]);
         $holds = collect([]);
-        foreach ($tables as $table) {
-            if ($this->hasLastTable($table)) {
-                $holds->push($table);
+
+        foreach ($this->getSourceTables() as $table) {
+            $index = $this->hasLastTable($table);
+            if ($index >= 0) {
+                $holds->put($index, $table);
             } elseif (!$this->hasIgnoreTable($table)) {
                 $filteredTables->push($table);
             }
         }
+        $arrayHolds = $holds->toArray();
+        ksort($arrayHolds);
+        $holds = collect($arrayHolds);
+
         return $filteredTables->merge($holds);
     }
 
@@ -282,13 +287,14 @@ abstract class Import
     }
 
     /**
-     * Check if a specified table should be last
+     * Gets the index of a table in the last tables array
      *
-     * @return bool
+     * @return int
      */
     public function hasLastTable($table)
     {
-        return in_array($table, $this->lastTables);
+        $index = array_search($table, $this->lastTables);
+        return ($index !== false) ? $index : -1;
     }
 
     /**
