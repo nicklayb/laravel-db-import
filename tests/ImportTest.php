@@ -11,7 +11,7 @@ class BasicImport extends Nicklayb\LaravelDbImport\Import
 class ExtendedImport extends Nicklayb\LaravelDbImport\Import
 {
     protected $ignoreTables = [ 'migrations' ];
-    protected $lastTables = [ 'relation_one', 'relation_two' ];
+    protected $lastTables = [ 'relation_two','relation_one' ];
     protected $selects = [
         'users' => [
             'id', 'firstname', 'lastname'
@@ -89,12 +89,12 @@ class ImportTest extends TestCase
 
     public function testHasLastTable()
     {
-        $this->assertTrue($this->extendedImport->hasLastTable('relation_one'));
+        $this->assertEquals($this->extendedImport->hasLastTable('relation_one'), 1);
     }
 
     public function testHasLastTableInexistant()
     {
-        $this->assertFalse($this->extendedImport->hasLastTable('products'));
+        $this->assertEquals($this->extendedImport->hasLastTable('products'), -1);
     }
 
     public function testHasPasswordReset()
@@ -236,10 +236,12 @@ class ImportTest extends TestCase
             'products',
             'roles',
             'orders',
-            'relation_one',
-            'relation_two'
+            'relation_two',
+            'relation_one'
         ];
-
-        $this->assertEquals($expected, $this->extendedImport->getSortedSourceTables()->toArray());
+        $tables = $this->extendedImport->getSortedSourceTables()->toArray();
+        for ($i = 0; $i < count($tables) ; $i++) {
+            $this->assertEquals($expected[$i], $tables[$i]);
+        }
     }
 }
