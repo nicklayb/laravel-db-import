@@ -331,7 +331,7 @@ abstract class Import
      *
      * @return bool
      */
-    public function needsRefrseh()
+    public function needsRefresh()
     {
         return $this->refresh;
     }

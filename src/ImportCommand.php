@@ -31,7 +31,7 @@ class ImportCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Import data from a source database to a destionation database';
+    protected $description = 'Import data from a source database to a destination database';
 
     /**
      * Import to execute
@@ -118,7 +118,7 @@ class ImportCommand extends Command
     {
         if ($this->boot()) {
             $this->bar->start();
-            if ($this->import->needsRefrseh()) {
+            if ($this->import->needsRefresh()) {
                 $this->bar->setMessage('Refreshing');
                 Artisan::call('migrate:refresh');
             }
