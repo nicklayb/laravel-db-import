@@ -3,6 +3,7 @@
 namespace Nicklayb\LaravelDbImport;
 
 use DB;
+use Str;
 
 /**
  * Class for Import process
@@ -207,7 +208,7 @@ abstract class Import
      */
     public function getFilterName($table)
     {
-        return 'filter'.studly_case($table);
+        return 'filter'. Str::studly($table);
     }
 
     /**
@@ -354,7 +355,7 @@ abstract class Import
      */
     public function getManipulationName($table)
     {
-        return 'manipulate'.studly_case($table);
+        return 'manipulate'.Str::studly($table);
     }
 
     /**
